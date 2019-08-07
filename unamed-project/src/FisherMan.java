@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 //CANNOT USE NOTIFY(), NOTIFYALL(), or WAIT() in this project. 
@@ -15,6 +16,10 @@ public class FisherMan extends Thread {
 	private int fisherManNum = 0;
 	Random r = new Random();
 	private int arr[] = new int[100];
+	private double bankAccount = 0.00f;
+	private final int travelCost = 250;
+	public boolean myturn = false;
+	public static Ranger ranger = new Ranger();
 	
 	public FisherMan(int x){
 		super();
@@ -44,6 +49,9 @@ public class FisherMan extends Thread {
 		return "";
 	}
 	
+	public synchronized boolean getTurn() { return myturn; }
+	public synchronized void setTurn(boolean flag) { myturn = flag; }
+	
 	//Prints which fish was caught
 	private void Reel(int fish) {
 		if(arr[fish] == 250) {
@@ -52,7 +60,7 @@ public class FisherMan extends Thread {
 		}else System.out.println("Fisherman " + fisherManNum + " reeled in " + fishType(fish));
 	}
 	
-	//Creats the thread and prints when each fishermen starts fishing again.
+	//Creates the thread and prints when each fishermen starts fishing again.
 	private void cast() {
 		System.out.println("Fisherman " + fisherManNum + ": cast his rod ");
 		try {
@@ -100,7 +108,7 @@ public class FisherMan extends Thread {
 		Reel(fish);
 	}
 	
-	//Instead of rewriting the thread, i created a method that generated the threads use.
+	//Instead of rewriting the thread, I created a method that generated the threads use.
 	public void waitSleep(int x) {
 		System.out.println("Fisherman " + fisherManNum + ": is waiting for fish to bite");
 		try {
@@ -120,7 +128,7 @@ public class FisherMan extends Thread {
 		caughtBigOne = true;
 	}
 	
-	//Code that gets the fisherman to and from bretton
+	//Code that gets the fisherman to and from Bretton
 	public void journeyToBreton(){
 		if(caughtBigOne) {
 		System.out.println("Fisherman " + fisherManNum + " is departing Morrowind for Bretron");
@@ -134,15 +142,38 @@ public class FisherMan extends Thread {
 		
 	}
 	
+	public void enqueueRanger(){
+		Ranger.fishingHole.add(this);
+	}
+	
 	//This is all the actions the fishermen do during their simulation.
 	@Override 
 	public void run(){
+		Ranger.fishingHole.add(this);
 		msg("Began Fishing");
-		while(!caughtBigOne) {
+		ranger.run();
+		//while(true) {
+		
+		while(!myturn) { }
+		
+		while(myturn) {
 			cast();
 			lazyWait();
-		}
-		if(caughtBigOne) journeyToBreton();
+			if(caughtBigOne) {
+				Ranger.stopFishing(this);
+				journeyToBreton();
+				Ranger.fishingHole.add(this);
+				}
+			}//
+		//while market loop
+		
+		//While(true loop needed) Nested while loop 
 	}
 	
+	public int getFishermanNumber() {
+		return fisherManNum;
+	}
+	public String toString() {
+		return "Fisherman " + fisherManNum;
+	}
 }

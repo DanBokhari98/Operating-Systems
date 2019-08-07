@@ -13,13 +13,16 @@ public class MainThread extends Thread {
 	private static Thread[] fishermenArray;
 	private static boolean boatingTrip = false;
 	private static boolean allBigFish = false;
+	public static boolean [] enterCs;
 	
 	public static void main(String[] args) {
 		BeginTravel();
 		fishermenArray = new Thread[6];
+		enterCs = new boolean[6];
 		for(int i = 0; i < 6; i++){
 			Thread t = new FisherMan(i + 1);
 			fishermenArray[i] = t;
+			enterCs[i] = false;
 			t.start();
 		}
 		
@@ -49,14 +52,6 @@ public class MainThread extends Thread {
 		boatTrip();
 		System.out.println("\nArrived at Morrowind: Greetings! \n");
 	}
-	
-	/*
-	public static void sendThemBack() {
-		System.out.println("\nBoat back to Breton has departed!\n");
-		boatTrip();
-		System.out.println("\nArrived Back at Breton and into the market place");
-	}
-	*/
 
 	public static void boatTrip() {
 		int count = 5;
@@ -75,10 +70,6 @@ public class MainThread extends Thread {
 	
 	public void addQueue(FisherMan m) {
 		fishing.add(m);
-	}
-	
-	//Who knows
-	public synchronized void incVar(){
 	}
 	
 	@Override
