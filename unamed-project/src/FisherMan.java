@@ -19,6 +19,7 @@ public class FisherMan extends Thread {
 	private double bankAccount = 0.00f;
 	private final int travelCost = 250;
 	public boolean myturn = false;
+	public boolean shopping = false;
 	public static Ranger ranger = new Ranger();
 	
 	public FisherMan(int x){
@@ -164,11 +165,20 @@ public class FisherMan extends Thread {
 				journeyToBreton();
 				Ranger.fishingHole.add(this);
 				}
-			}//
+			}
+		/*
+		CustomerAssociate.line.add(this);
+		while(!shopping) {}
+		
+		while(shopping) {	
+		}
+		*/
 		//while market loop
 		
 		//While(true loop needed) Nested while loop 
 	}
+	public double getBankAccount() { return bankAccount; }
+	public void transaction(double cost) { bankAccount = bankAccount + cost; }
 	
 	public int getFishermanNumber() {
 		return fisherManNum;
