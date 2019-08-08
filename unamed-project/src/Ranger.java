@@ -39,11 +39,3 @@ public class Ranger implements Runnable {
 	}
 
 }
-
-/*
- * Need shared variables
- * Store students in Queue
- * Queue is needed to know who is fishing at the time
- * if a student is waiting remove from Queue
- * CHALLENGE -> TERMINATE RANGER
- * */

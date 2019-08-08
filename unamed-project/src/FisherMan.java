@@ -21,6 +21,7 @@ public class FisherMan extends Thread {
 	public boolean myturn = false;
 	public boolean shopping = false;
 	public static Ranger ranger = new Ranger();
+	public static CustomerAssociate associate = new CustomerAssociate();
 	
 	public FisherMan(int x){
 		super();
@@ -139,8 +140,16 @@ public class FisherMan extends Thread {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Fisherman " + fisherManNum + " returned from Morrowind");
-		
+		System.out.println("Fisherman " + fisherManNum + " returned from Morrowind");	
+	}
+	
+	public void journeyToMorrowind(){
+		System.out.println("Fisherman " + fisherManNum + " is departing Breton Market for Marrowind");
+		try {
+			Thread.sleep(5000);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 	public void enqueueRanger(){
@@ -153,36 +162,89 @@ public class FisherMan extends Thread {
 		Ranger.fishingHole.add(this);
 		msg("Began Fishing");
 		ranger.run();
-		//while(true) {
-		
-		while(!myturn) { }
-		
-		while(myturn) {
-			cast();
-			lazyWait();
-			if(caughtBigOne) {
-				Ranger.stopFishing(this);
-				journeyToBreton();
-				Ranger.fishingHole.add(this);
+		associate.run();
+		while(true) {
+			while(!myturn) { }
+			while(myturn) {
+				cast();
+				lazyWait();
+				if(caughtBigOne) {
+					Ranger.stopFishing(this);
+					journeyToBreton();
+					Ranger.fishingHole.add(this);
+					caughtBigOne = false;
+					myturn = false;
+					shopping = true;
+					}
+				} 
+				CustomerAssociate.line.add(this);
+				while(!shopping) {}
+				while(shopping) {
+					CustomerAssociate.queueCustomer(this);
+					journeyToMorrowind();
+					System.out.println("Fisher man: " + fisherManNum + " entered the market");
+					CustomerAssociate.dequeueCustomer(this);
+					shopping = false;
+				}
+				System.out.println("BANK-ACCOUNT: " + bankAccount);
+				if(bankAccount >= 250) {
+					System.out.println("Fisher man " + fisherManNum + " is returning home. Finished their fishing trip");
+					break;
 				}
 			}
-		/*
-		CustomerAssociate.line.add(this);
-		while(!shopping) {}
-		
-		while(shopping) {	
 		}
-		*/
-		//while market loop
-		
-		//While(true loop needed) Nested while loop 
-	}
+	
 	public double getBankAccount() { return bankAccount; }
 	public void transaction(double cost) { bankAccount = bankAccount + cost; }
 	
 	public int getFishermanNumber() {
 		return fisherManNum;
 	}
+	
+	public synchronized void setStatus(boolean flag) {
+		shopping = flag;
+		shop();
+	}
+	
+	public synchronized void shop() {
+		try {
+			for(Integer c : bucket) {
+				if(c == 10) {
+					System.out.println("Sales Associate bought fisherman " + fisherManNum + " 10 pound fish");
+					Thread.sleep(1000);
+					bankAccount += c * 0.75f;
+					bucket.remove(c);
+				}
+				else if(c == 20) {
+					System.out.println("Sales Associate bought fisherman " + fisherManNum + " 20 pound fish");
+					Thread.sleep(2000);
+					bankAccount += c * 0.75f;
+					bucket.remove(c);
+				}
+				else if(c == 50) {
+					Thread.sleep(3000);
+					System.out.println("Sales Associate bought fisherman " + fisherManNum + " 50 pound fish");
+					bankAccount += c * 0.75f;
+					bucket.remove(c);
+				}
+				else if(c == 100) {
+					Thread.sleep(4000);
+					System.out.println("Sales Associate bought fisherman " + fisherManNum + " 100 pound fish");
+					bankAccount += c * 0.75f;
+					bucket.remove(c);
+				}
+				else if(c == 250) {
+					Thread.sleep(5000);
+					System.out.println("Sales Associate bought fisherman " + fisherManNum + " 250 pound fish");
+					bankAccount += c * 0.75f;
+					bucket.remove(c);
+					}
+				}
+		} catch (InterruptedException e) {}
+	}
+	
+	public boolean getStatus() { return shopping; }
+	
 	public String toString() {
 		return "Fisherman " + fisherManNum;
 	}
