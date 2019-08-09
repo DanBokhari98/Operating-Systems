@@ -34,7 +34,6 @@ public class Ranger implements Runnable {
 						isServing = false;
 						System.out.println("Ranger removed Fisher man " + f.getFishermanNumber() + " from the fishing hole");
 					} catch(Exception e) {}
-		
 			}
 	}
 

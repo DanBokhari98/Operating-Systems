@@ -2,17 +2,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
-//CANNOT USE NOTIFY(), NOTIFYALL(), or WAIT() in this project. 
-
 public class FisherMan extends Thread {
-	/*
-		CAN USE INTTERUPT(), isINTERRUPTED()
-		getPRIORITY(), setPRIORITY(), and currentTHREAD() methods
-		and YIELD() methods. ! NOT MANDATORY !
-	 *  - Implement Ranger Thread to handle Fishermen (no clue yet)
-	 */
 	ArrayList<Integer> bucket = new ArrayList<>();
 	public boolean caughtBigOne = false;
+	public boolean enoughFish = false;
 	private int fisherManNum = 0;
 	Random r = new Random();
 	private int arr[] = new int[100];
@@ -22,21 +15,26 @@ public class FisherMan extends Thread {
 	public boolean shopping = false;
 	public static Ranger ranger = new Ranger();
 	public static CustomerAssociate associate = new CustomerAssociate();
+	public boolean [] finished;
+	public boolean allFinished = false;
 	
 	public FisherMan(int x){
 		super();
 		fisherManNum = x;
+		finished = new boolean[6];
 		fillArr();
 	}
 	
+	//Populates the probability of catching a fish!
 	public void fillArr() {
 		for(int i = 0; i < 100; i++) {
 			if(i <= 15) arr[i] = 0;
 			else if(i <= 30 && i >= 16) arr[i] = 10;
 			else if(i <= 50 && i >= 31) arr[i] = 20;
-			else if(i <= 70 && i >= 51) arr[i] = 50;
-			else if(i <= 90 && i >= 71) arr[i] = 100;
-			else if(i <= 100 && i >= 91) arr[i] = 250;
+			else if(i <= 70 && i >= 51) arr[i] = 30;
+			else if(i <= 90 && i >= 71) arr[i] = 40;
+			else if(i <= 100 && i >= 91) arr[i] = 50;
+			else if(i <= 100 && i >= 97) arr[i] = 200;
 		}
 	}
 	
@@ -45,10 +43,23 @@ public class FisherMan extends Thread {
 		if(arr[x] == 0) return "nothing";
 		else if(arr[x] == 10) return "a small fish";
 		else if(arr[x] == 20) return "a medium fish";
-		else if(arr[x] == 50) return "a large fish";
-		else if(arr[x] == 100) return "an extra large fish";
-		else if(arr[x] == 250) return "BIG ONE";
+		else if(arr[x] == 30) return "a large fish";
+		else if(arr[x] == 40) return "an extra large fish";
+		else if(arr[x] == 50) return "a huge fish!";
+		else if(arr[x] == 200) return "THE BIG ONE!";
 		return "";
+	}
+	
+	public void isSufficient(int sum) {
+		if(sum >= 50) enoughFish = true; 
+	}
+	
+	public int currentPoundsOfFish() {
+		int sum = 0;
+		for(Integer c : bucket) {
+			sum += c;
+		}
+		return sum;
 	}
 	
 	public synchronized boolean getTurn() { return myturn; }
@@ -57,9 +68,9 @@ public class FisherMan extends Thread {
 	//Prints which fish was caught
 	private void Reel(int fish) {
 		if(arr[fish] == 250) {
-			System.out.println("Fisherman " + fisherManNum + " REELED IN THE " + fishType(fish));
+			System.out.println("Fisherman " + fisherManNum + ": REELED IN THE " + fishType(fish));
 			setBigOne();
-		}else System.out.println("Fisherman " + fisherManNum + " reeled in " + fishType(fish));
+		}else System.out.println("Fisherman " + fisherManNum + ": reeled in " + fishType(fish));
 	}
 	
 	//Creates the thread and prints when each fishermen starts fishing again.
@@ -101,11 +112,12 @@ public class FisherMan extends Thread {
 	private void lazyWait() {
 		int bait = getBait();
 		int fish = nextFishChance(bait);
-		if(arr[fish] <= 10) waitSleep(200);
-		else if(arr[fish] == 20) waitSleep(400);
-		else if(arr[fish] == 50) waitSleep(500);
-		else if(arr[fish] == 100) waitSleep(600);
-		else if(arr[fish] == 250) waitSleep(700);
+		if(arr[fish] <= 10) waitSleep(300);
+		else if(arr[fish] == 20) waitSleep(600);
+		else if(arr[fish] == 30) waitSleep(800);
+		else if(arr[fish] == 40) waitSleep(900);
+		else if(arr[fish] == 50) waitSleep(1000);
+		else if(arr[fish] == 200) waitSleep(1200);
 		bucket.add(arr[fish]);
 		Reel(fish);
 	}
@@ -168,11 +180,11 @@ public class FisherMan extends Thread {
 			while(myturn) {
 				cast();
 				lazyWait();
-				if(caughtBigOne) {
+				isSufficient(currentPoundsOfFish());
+				if(enoughFish) {
 					Ranger.stopFishing(this);
 					journeyToBreton();
 					Ranger.fishingHole.add(this);
-					caughtBigOne = false;
 					myturn = false;
 					shopping = true;
 					}
@@ -180,22 +192,23 @@ public class FisherMan extends Thread {
 				CustomerAssociate.line.add(this);
 				while(!shopping) {}
 				while(shopping) {
-					CustomerAssociate.queueCustomer(this);
+					System.out.println("Fisherman: " + fisherManNum + " entered the market");
 					journeyToMorrowind();
-					System.out.println("Fisher man: " + fisherManNum + " entered the market");
+					CustomerAssociate.queueCustomer(this);
 					CustomerAssociate.dequeueCustomer(this);
+					enoughFish = false;
 					shopping = false;
+					myturn = true;
 				}
-				System.out.println("BANK-ACCOUNT: " + bankAccount);
-				if(bankAccount >= 250) {
-					System.out.println("Fisher man " + fisherManNum + " is returning home. Finished their fishing trip");
+				if(bankAccount >= travelCost) {
+					finished[fisherManNum - 1] = true;
+					System.out.println("Fisherman " + fisherManNum + " is returning home and finished their trip");
 					break;
 				}
 			}
 		}
 	
 	public double getBankAccount() { return bankAccount; }
-	public void transaction(double cost) { bankAccount = bankAccount + cost; }
 	
 	public int getFishermanNumber() {
 		return fisherManNum;
@@ -206,42 +219,47 @@ public class FisherMan extends Thread {
 		shop();
 	}
 	
+	//Only service first person in queue get brian's help
 	public synchronized void shop() {
 		try {
-			for(Integer c : bucket) {
-				if(c == 10) {
+			while(!bucket.isEmpty()) {
+				int tempFish = bucket.remove(0);
+				if(tempFish == 10) {
 					System.out.println("Sales Associate bought fisherman " + fisherManNum + " 10 pound fish");
-					Thread.sleep(1000);
-					bankAccount += c * 0.75f;
-					bucket.remove(c);
+					Thread.sleep(300);
+					bankAccount += tempFish * 0.75f;
 				}
-				else if(c == 20) {
+				if(tempFish == 20) {
 					System.out.println("Sales Associate bought fisherman " + fisherManNum + " 20 pound fish");
-					Thread.sleep(2000);
-					bankAccount += c * 0.75f;
-					bucket.remove(c);
+					Thread.sleep(600);
+					bankAccount += tempFish * 0.75f;
 				}
-				else if(c == 50) {
-					Thread.sleep(3000);
+				if(tempFish == 30) {
+					Thread.sleep(900);
+					System.out.println("Sales Associate bought fisherman " + fisherManNum + " 30 pound fish");
+					bankAccount += tempFish * 0.75f;
+				}
+				if(tempFish == 40) {
+					Thread.sleep(1200);
+					System.out.println("Sales Associate bought fisherman " + fisherManNum + " 40 pound fish");
+					bankAccount += tempFish * 0.75f;
+				}
+				if(tempFish == 50) {
+					Thread.sleep(1500);
 					System.out.println("Sales Associate bought fisherman " + fisherManNum + " 50 pound fish");
-					bankAccount += c * 0.75f;
-					bucket.remove(c);
-				}
-				else if(c == 100) {
-					Thread.sleep(4000);
-					System.out.println("Sales Associate bought fisherman " + fisherManNum + " 100 pound fish");
-					bankAccount += c * 0.75f;
-					bucket.remove(c);
-				}
-				else if(c == 250) {
-					Thread.sleep(5000);
-					System.out.println("Sales Associate bought fisherman " + fisherManNum + " 250 pound fish");
-					bankAccount += c * 0.75f;
-					bucket.remove(c);
+					bankAccount += tempFish * 0.75f;
 					}
+				if(tempFish == 200) {
+					Thread.sleep(2000);
+					System.out.println("Sales Associate bought and stuffed fisherman " + fisherManNum + " 200 pound fish");
+					bankAccount += tempFish * 0.75f;
+					}
+				if(bucket.isEmpty()) break;
 				}
 		} catch (InterruptedException e) {}
 	}
+	
+	public void endTravel() {System.exit(0);}
 	
 	public boolean getStatus() { return shopping; }
 	
