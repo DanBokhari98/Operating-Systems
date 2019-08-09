@@ -35,11 +35,14 @@ public class MainThread extends Thread {
 	public static void intializeSim() {
 		System.out.println("pick a number of fisherman 2-6 preferably");
 		int x = in.nextInt();
-		while(x < 2 || x > 6){
+		int count = 0;
+		while(x < 2 || x > 6 && count < 3){
 			System.out.println("Incorrect number of fisherman, please choose 2-6");
 			x = in.nextInt();
+			count++;
 		}
-		num_threads = x;
+		if(count < 3) num_threads = x;
+		else num_threads = 6;
 	}
 	
 //First problem Getting the boat to travel
